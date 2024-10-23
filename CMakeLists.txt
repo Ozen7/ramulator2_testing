@@ -1,27 +1,14 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.10)
+project(MySimulator)
 
-project(
-  Ramulator
-  VERSION 2.0
-  LANGUAGES CXX
+# Set C++ standard
+set(CMAKE_CXX_STANDARD 17)
+
+# Specify source files
+set(SOURCES
+    src/RamulatorWrapper.cpp
+    src/main.cpp
 )
-
-#### Prompt the build type ####
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE "Release" CACHE STRING "" FORCE)
-endif()
-message("Configuring ${CMAKE_PROJECT_NAME} ${CMAKE_PROJECT_Version}...")
-message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DRAMULATOR_DEBUG")
-# set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-###############################
-
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
-
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
-set(CMAKE_CXX_EXTENSIONS OFF)
 
 #### External libraries ####
 include(FetchContent)
@@ -64,30 +51,23 @@ include_directories(${argparse_SOURCE_DIR}/include)
 message("Done configuring argparse.")
 ##################################
 
-include_directories(${CMAKE_SOURCE_DIR}/src)
-
-add_library(ramulator SHARED)
-set_target_properties(ramulator PROPERTIES
-  LIBRARY_OUTPUT_DIRECTORY  ${PROJECT_SOURCE_DIR}
-)
-target_link_libraries(
-  ramulator 
-  PUBLIC yaml-cpp
-  PUBLIC spdlog
+# Specify include directories for Ramulator 2.0
+include_directories(
+    ${CMAKE_SOURCE_DIR}/ramulator2/src
 )
 
-add_executable(ramulator-exe)
-target_link_libraries(
-  ramulator-exe 
-  # PRIVATE -Wl,--whole-archive ramulator -Wl,--no-whole-archive 
-  PRIVATE ramulator
-  PRIVATE argparse
-)
+# Specify your own include directory
+include_directories(${CMAKE_SOURCE_DIR}/include)
 
-set_target_properties(
-  ramulator-exe
-  PROPERTIES 
-  OUTPUT_NAME ramulator2
-)
+# Create the executable
+add_executable(MySimulator ${SOURCES})
 
-add_subdirectory(src)
+# Link the external libraries and the Ramulator library
+set(RAMULATOR_LIBRARY ${CMAKE_SOURCE_DIR}/ramulator2/libramulator.so)
+
+target_link_libraries(MySimulator 
+    PRIVATE ${RAMULATOR_LIBRARY}
+    PUBLIC yaml-cpp          # Link yaml-cpp
+    PUBLIC spdlog::spdlog    # Link spdlog
+    PRIVATE argparse          # Link argparse
+)
