@@ -28,16 +28,43 @@ void RamulatorWrapper::saveData(const std::string& filename) {
     outfile.close();
 }
 
-void RamulatorWrapper::sendRequest(uint64_t address, bool is_read) {
+void RamulatorWrapper::sendRequest(uint64_t address, bool is_read, std::function<void(Ramulator::Request&)> callback ) {
     bool success = frontend->receive_external_requests(
-        0, address, 0, [this](Ramulator::Request& req) {
-            std::cout << "Request completed for address: " << req.addr << " with command: " << req.type_id << std::endl;
-        }
+        0, address, 0, callback
     );
 
     if (success) {
         std::cout << "Request successfully sent to Ramulator!" << std::endl;
     } else {
         std::cout << "Request rejected (queue full)!" << std::endl;
+    }
+}
+
+// C-style function pointer for Python interop
+extern "C" {
+    typedef void (*CRequestCallback)(Ramulator::Request*);
+
+    RamulatorWrapper* RamulatorWrapper_new(const char* path) {
+        return new RamulatorWrapper(path);
+    }
+
+    void RamulatorWrapper_tick(RamulatorWrapper* wrapper) {
+        wrapper->tick();
+    }
+
+    void RamulatorWrapper_saveData(RamulatorWrapper* wrapper, const char* filename) {
+        wrapper->saveData(filename);
+    }
+
+    // Wrapper function that converts the C-style callback to std::function
+    void RamulatorWrapper_sendRequest(RamulatorWrapper* wrapper, uint64_t address, bool is_read, CRequestCallback c_callback) {
+        std::function<void(Ramulator::Request&)> callback = [c_callback](Ramulator::Request& req) {
+            c_callback(&req); // Call the C-style callback
+        };
+        wrapper->sendRequest(address, is_read, callback);
+    }
+
+    void RamulatorWrapper_delete(RamulatorWrapper* wrapper) {
+        delete wrapper;
     }
 }

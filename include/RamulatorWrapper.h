@@ -15,7 +15,7 @@ public:
     void saveData(const std::string& filename);
 
     // Send a memory request to Ramulator
-    void sendRequest(uint64_t address, bool is_read);
+    void sendRequest(uint64_t address, bool is_read, std::function<void(Ramulator::Request&)> callback);
 
     // Tick front and backend
     void tick();

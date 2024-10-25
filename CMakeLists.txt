@@ -7,7 +7,6 @@ set(CMAKE_CXX_STANDARD 17)
 # Specify source files
 set(SOURCES
     src/RamulatorWrapper.cpp
-    src/main.cpp
 )
 
 #### External libraries ####
@@ -59,13 +58,25 @@ include_directories(
 # Specify your own include directory
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
-# Create the executable
-add_executable(MySimulator ${SOURCES})
+# Create a shared library (the .so file)
+add_library(RamulatorWrapper SHARED ${SOURCES})
 
-# Link the external libraries and the Ramulator library
+# Link the external libraries and the Ramulator library for the shared library
 set(RAMULATOR_LIBRARY ${CMAKE_SOURCE_DIR}/ramulator2/libramulator.so)
 
+target_link_libraries(RamulatorWrapper 
+    PRIVATE ${RAMULATOR_LIBRARY}
+    PUBLIC yaml-cpp          # Link yaml-cpp
+    PUBLIC spdlog::spdlog    # Link spdlog
+    PRIVATE argparse          # Link argparse
+)
+
+# Optionally, create an executable that uses the shared library
+add_executable(MySimulator src/main.cpp)
+
+# Link the shared library to the executable
 target_link_libraries(MySimulator 
+    PRIVATE RamulatorWrapper
     PRIVATE ${RAMULATOR_LIBRARY}
     PUBLIC yaml-cpp          # Link yaml-cpp
     PUBLIC spdlog::spdlog    # Link spdlog

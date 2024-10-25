@@ -11,11 +11,11 @@ int main() {
 
         // Send multiple read requests in a loop
         for (uint64_t address = 0x1000; address < 0x2000; address += 0x100) {
-            ramulator.sendRequest(address, true); // Read requests
+            // ramulator.sendRequest(address, true); // Read requests
         }
 
         // Send a write request
-        ramulator.sendRequest(0x2000, false); // Write request to address 0x2000
+        // ramulator.sendRequest(0x2000, false); // Write request to address 0x2000
 
         // Save the current state/data
         ramulator.saveData("memory_state.txt");
